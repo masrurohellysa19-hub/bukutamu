@@ -6,5 +6,5 @@
  */
 window.APP_CONFIG = {
   // Masukkan Web App URL dari Google Apps Script di dalam tanda kutip di bawah:
-  GAS_API_URL: ""
+  GAS_API_URL: "https://script.google.com/macros/s/AKfycbwV8Rl2wSlDm7keu7sm0rvRFP0i4DuI8ON3txv-CsZmYxGh4ii82kHI1cBes2Ydu1uKMw/exec"
 };
