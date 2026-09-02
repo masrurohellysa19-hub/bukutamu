@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>Buku Tamu Digital - Portal Tamu</title>
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- QRCode.js Generator CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <style>
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .card-shadow {
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 6px 16px -2px rgba(0, 0, 0, 0.03);
+    }
+
+    /* Prevent iOS auto-zoom on input focus */
+    @media screen and (max-width: 640px) {
+      input, textarea, select {
+        font-size: 16px !important;
+      }
+    }
+
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #printArea, #printArea * {
+        visibility: visible;
+      }
+      #printArea {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-slate-900 selection:text-white">
+
+  <!-- Top Navigation Header (Mobile App Bar) -->
+  <header class="bg-white/90 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-40">
+    <div class="max-w-md mx-auto px-4 h-14 sm:h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-2.5">
+        <div class="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center text-white shadow-sm flex-shrink-0">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+        </div>
+        <div>
+          <span class="font-bold tracking-tight text-slate-900 text-sm sm:text-base leading-tight block">Buku Tamu Digital</span>
+          <span class="text-[10px] sm:text-[11px] text-slate-500 font-medium block">Portal Pengunjung</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Mobile Content Area -->
+  <main class="max-w-md mx-auto px-4 py-4 sm:py-6 flex-1 w-full space-y-4 sm:space-y-5">
+
+    <!-- ==================== VIEW 1: BARCODE AKUN TAMU (TERDAFTAR) ==================== -->
+    <div id="viewRegisteredGuest" class="hidden space-y-4 sm:space-y-5">
+      
+      <!-- Main E-Badge Pass Card -->
+      <div class="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 border border-slate-200/80 card-shadow text-center space-y-4">
+        
+        <!-- Status Chip -->
+        <div class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+          </svg>
+          <span>Akun Tamu Terdaftar</span>
+        </div>
+
+        <!-- Guest Identity Details -->
+        <div>
+          <h1 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight" id="cardGuestNama">-</h1>
+          <p class="text-xs text-slate-500 font-medium mt-0.5" id="cardGuestInstansi">-</p>
+        </div>
+
+        <!-- High-Contrast QR Code Container -->
+        <div class="bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200/70 flex flex-col items-center justify-center space-y-2.5">
+          <div id="accountQrcodeBox" class="p-2.5 bg-white rounded-xl shadow-sm border border-slate-200 inline-block"></div>
+          <div class="font-mono font-bold text-sm sm:text-base tracking-wider text-slate-900 bg-white px-3 py-1 rounded-lg border border-slate-200" id="cardVisitorId">VIS-0000</div>
+          <p class="text-[11px] text-slate-500 leading-relaxed max-w-xs">
+            Tunjukkan barcode ini kepada petugas meja piket saat <b>Check-In</b> masuk dan <b>Check-Out</b> keluar.
+          </p>
+        </div>
+
+        <!-- Mobile Action Buttons (Print / Download) -->
+        <div class="grid grid-cols-2 gap-2 pt-1">
+          <button type="button" onclick="printBadge()" class="min-h-[44px] py-2.5 px-3 rounded-xl bg-slate-900 active:scale-[0.98] hover:bg-slate-800 text-white text-xs font-semibold transition-all flex items-center justify-center space-x-1.5 select-none shadow-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+            </svg>
+            <span>Cetak Pass</span>
+          </button>
+
+          <button type="button" onclick="downloadQrImage()" class="min-h-[44px] py-2.5 px-3 rounded-xl border border-slate-300 active:scale-[0.98] hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all flex items-center justify-center space-x-1.5 select-none">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+            </svg>
+            <span>Simpan QR</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Visit Form for Today -->
+      <div class="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 border border-slate-200/80 card-shadow space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div>
+            <h2 class="text-sm font-bold text-slate-900">Kunjungan Hari Ini</h2>
+            <p class="text-[11px] text-slate-500">Perbarui tujuan kedatangan Anda</p>
+          </div>
+          <span class="text-[10px] px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 font-medium">Aktif</span>
+        </div>
+
+        <form id="repeatVisitForm" onsubmit="handleRepeatVisitSubmit(event)" class="space-y-3">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Bertemu Dengan <span class="text-rose-500">*</span></label>
+            <input type="text" id="repeatBertemu" required placeholder="Nama Pejabat / Ruangan / Bagian" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white transition-all">
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Keperluan Kunjungan <span class="text-rose-500">*</span></label>
+            <textarea id="repeatKeperluan" required rows="2" placeholder="Tuliskan tujuan dan keperluan kunjungan Anda hari ini" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white transition-all"></textarea>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Jumlah Orang</label>
+              <input type="number" id="repeatJumlahOrang" min="1" value="1" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white transition-all">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Plat Nomor</label>
+              <input type="text" id="repeatPlatNomor" placeholder="B 1234 ABC" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white transition-all">
+            </div>
+          </div>
+
+          <div class="pt-1">
+            <button type="submit" id="btnRepeatSubmit" class="w-full min-h-[46px] py-3 px-4 rounded-xl bg-emerald-600 active:scale-[0.98] hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold transition-all flex items-center justify-center space-x-1.5 shadow-sm select-none">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <span id="btnRepeatSubmitText">Kirim & Aktifkan Kunjungan Hari Ini</span>
+            </button>
+          </div>
+        </form>
+
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+          <button type="button" onclick="showEditProfileModal()" class="text-slate-600 hover:text-slate-900 font-medium py-1 px-2 rounded-lg hover:bg-slate-50 transition-colors">
+            Edit Profil
+          </button>
+          <button type="button" onclick="confirmResetAccount()" class="text-rose-600 hover:text-rose-700 font-medium py-1 px-2 rounded-lg hover:bg-rose-50 transition-colors">
+            Daftar Akun Baru
+          </button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ==================== VIEW 2: FORMULIR PENDAFTARAN (TAMU BARU) ==================== -->
+    <div id="viewNewGuest" class="hidden space-y-4 sm:space-y-5">
+      
+      <div class="text-center px-2">
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Formulir Buku Tamu</h1>
+        <p class="text-xs text-slate-600 mt-1">Lengkapi data Anda untuk menerbitkan Barcode Akun Tamu digital.</p>
+      </div>
+
+      <div class="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 border border-slate-200/80 card-shadow">
+        <form id="newGuestForm" onsubmit="handleNewGuestSubmit(event)" class="space-y-3.5">
+          
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Nama Lengkap <span class="text-rose-500">*</span></label>
+            <input type="text" id="newNama" required placeholder="Nama lengkap Anda" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white transition-all">
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Instansi / Asal Tamu</label>
+            <input type="text" id="newInstansi" placeholder="Instansi / Pribadi" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white transition-all">
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">No. WhatsApp / HP <span class="text-rose-500">*</span></label>
+            <input type="tel" id="newNoHp" required placeholder="08xxxxxxxxxx" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white transition-all">
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Bertemu Dengan <span class="text-rose-500">*</span></label>
+            <input type="text" id="newBertemu" required placeholder="Nama Pejabat / Ruangan / Bagian" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white transition-all">
+          </div>
+
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Jumlah Orang</label>
+              <input type="number" id="newJumlahOrang" min="1" value="1" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white transition-all">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Plat Nomor</label>
+              <input type="text" id="newPlatNomor" placeholder="B 1234 ABC" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white transition-all">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Keperluan Kunjungan <span class="text-rose-500">*</span></label>
+            <textarea id="newKeperluan" required rows="2" placeholder="Tuliskan tujuan dan keperluan kunjungan Anda" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white transition-all"></textarea>
+          </div>
+
+          <div class="pt-2">
+            <button type="submit" id="btnNewSubmit" class="w-full min-h-[48px] py-3.5 px-4 rounded-xl bg-slate-900 active:scale-[0.98] hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold transition-all flex items-center justify-center space-x-1.5 shadow-sm select-none">
+              <span id="btnNewSubmitText">Daftar & Terbitkan Barcode Akun</span>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+              </svg>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ==================== EDIT PROFILE MODAL ==================== -->
+  <div id="editProfileModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white rounded-t-3xl sm:rounded-2xl p-6 w-full max-w-md border border-slate-200 card-shadow space-y-4 animate-in fade-in slide-in-from-bottom duration-200">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <h3 class="font-bold text-sm text-slate-900">Perbarui Profil Tamu</h3>
+        <button onclick="closeEditProfileModal()" class="text-slate-400 hover:text-slate-600 text-xs font-semibold py-1 px-2">Tutup</button>
+      </div>
+
+      <form id="editProfileForm" onsubmit="handleSaveProfileEdit(event)" class="space-y-3">
+        <div>
+          <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Nama Lengkap</label>
+          <input type="text" id="editNama" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-900">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Instansi / Asal</label>
+          <input type="text" id="editInstansi" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-900">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">No. WhatsApp / HP</label>
+          <input type="tel" id="editNoHp" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-900">
+        </div>
+
+        <div class="pt-2 flex space-x-2">
+          <button type="submit" class="flex-1 min-h-[44px] py-2.5 px-4 rounded-xl bg-slate-900 active:scale-[0.98] text-white text-xs font-semibold hover:bg-slate-800 transition-all">
+            Simpan Perubahan
+          </button>
+          <button type="button" onclick="closeEditProfileModal()" class="min-h-[44px] py-2.5 px-4 rounded-xl border border-slate-200 active:scale-[0.98] text-slate-600 text-xs font-semibold">
+            Batal
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200/80 py-3.5 text-center text-[11px] text-slate-500">
+    <div class="max-w-md mx-auto px-4">
+      Sistem Buku Tamu Digital
+    </div>
+  </footer>
+
+  <!-- Print Area -->
+  <div id="printArea" class="hidden p-8 text-center"></div>
+
+  <!-- Toast Notification (Mobile Optimized) -->
+  <div id="toast" class="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-sm z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="bg-slate-900 text-white text-xs font-medium px-4 py-3 rounded-2xl shadow-xl border border-slate-800 text-center sm:text-left" id="toastContent">
+      Pemberitahuan
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'BUKU_TAMU_USER_ACCOUNT';
+    let currentAccount = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initGuestPortal();
+    });
+
+    function getApiUrl() {
+      const currentUrl = window.location.href;
+      if (currentUrl.includes('script.google.com')) {
+        return currentUrl.split('?')[0];
+      }
+      return localStorage.getItem('SHOPIFI_GAS_URL') || '';
+    }
+
+    function initGuestPortal() {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try {
+          currentAccount = JSON.parse(stored);
+          renderRegisteredGuestView();
+          return;
+        } catch (e) {
+          console.error("Gagal membaca cache akun tamu:", e);
+        }
+      }
+      renderNewGuestView();
+    }
+
+    function renderRegisteredGuestView() {
+      document.getElementById('viewNewGuest').classList.add('hidden');
+      document.getElementById('viewRegisteredGuest').classList.remove('hidden');
+
+      document.getElementById('cardGuestNama').innerText = currentAccount.nama;
+      document.getElementById('cardGuestInstansi').innerText = currentAccount.instansi || 'Pribadi';
+      document.getElementById('cardVisitorId').innerText = currentAccount.visitorId;
+
+      // Pre-fill repeat form with last known values if appropriate
+      if (currentAccount.platNomor) {
+        document.getElementById('repeatPlatNomor').value = currentAccount.platNomor;
+      }
+      if (currentAccount.bertemu) {
+        document.getElementById('repeatBertemu').value = currentAccount.bertemu;
+      }
+
+      // Generate Account QR Code (160px responsive)
+      const qrBox = document.getElementById('accountQrcodeBox');
+      qrBox.innerHTML = '';
+      new QRCode(qrBox, {
+        text: currentAccount.visitorId,
+        width: 160,
+        height: 160,
+        colorDark: "#0f172a",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+      });
+    }
+
+    function renderNewGuestView() {
+      document.getElementById('viewRegisteredGuest').classList.add('hidden');
+      document.getElementById('viewNewGuest').classList.remove('hidden');
+      document.getElementById('newGuestForm').reset();
+    }
+
+    // ==================== NEW GUEST REGISTRATION ====================
+    async function handleNewGuestSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnNewSubmit');
+      const btnText = document.getElementById('btnNewSubmitText');
+
+      btn.disabled = true;
+      btnText.innerText = "Mendaftarkan...";
+
+      const now = new Date();
+      const dateStr = now.getFullYear() + "" + String(now.getMonth() + 1).padStart(2, '0') + "" + String(now.getDate()).padStart(2, '0');
+      const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+      let visitorId = "VIS-" + dateStr + "-" + randomSuffix;
+
+      const payload = {
+        visitorId: visitorId,
+        nama: document.getElementById('newNama').value.trim(),
+        instansi: document.getElementById('newInstansi').value.trim(),
+        noHp: document.getElementById('newNoHp').value.trim(),
+        bertemu: document.getElementById('newBertemu').value.trim(),
+        jumlahOrang: document.getElementById('newJumlahOrang').value || '1',
+        keperluan: document.getElementById('newKeperluan').value.trim(),
+        platNomor: document.getElementById('newPlatNomor').value.trim()
+      };
+
+      const apiUrl = getApiUrl();
+      if (apiUrl) {
+        try {
+          const res = await fetch(apiUrl, {
+            method: 'POST',
+            body: JSON.stringify({
+              action: 'create_guest',
+              payload: payload
+            })
+          });
+          const result = await res.json();
+          if (result.status === 'success' && result.data) {
+            if (result.data.visitorId) visitorId = result.data.visitorId;
+            payload.visitorId = visitorId;
+          }
+        } catch (err) {
+          console.warn("Gagal terhubung ke API online, menyimpan secara lokal:", err);
+        }
+      }
+
+      // Save persistent guest account in local storage (never logs out automatically)
+      currentAccount = payload;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(currentAccount));
+
+      btn.disabled = false;
+      btnText.innerText = "Daftar & Terbitkan Barcode Akun";
+
+      renderRegisteredGuestView();
+      showToast("Pendaftaran berhasil. Barcode akun Anda telah aktif!");
+    }
+
+    // ==================== REPEAT VISIT SUBMISSION ====================
+    async function handleRepeatVisitSubmit(e) {
+      e.preventDefault();
+      if (!currentAccount) return;
+
+      const btn = document.getElementById('btnRepeatSubmit');
+      const btnText = document.getElementById('btnRepeatSubmitText');
+
+      btn.disabled = true;
+      btnText.innerText = "Mengirim Kunjungan...";
+
+      const bertemu = document.getElementById('repeatBertemu').value.trim();
+      const keperluan = document.getElementById('repeatKeperluan').value.trim();
+      const jumlahOrang = document.getElementById('repeatJumlahOrang').value || '1';
+      const platNomor = document.getElementById('repeatPlatNomor').value.trim();
+
+      const payload = {
+        visitorId: currentAccount.visitorId,
+        nama: currentAccount.nama,
+        instansi: currentAccount.instansi,
+        noHp: currentAccount.noHp,
+        bertemu: bertemu,
+        keperluan: keperluan,
+        jumlahOrang: jumlahOrang,
+        platNomor: platNomor
+      };
+
+      // Update cached last visit details
+      currentAccount.bertemu = bertemu;
+      currentAccount.keperluan = keperluan;
+      currentAccount.jumlahOrang = jumlahOrang;
+      currentAccount.platNomor = platNomor;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(currentAccount));
+
+      const apiUrl = getApiUrl();
+      if (apiUrl) {
+        try {
+          await fetch(apiUrl, {
+            method: 'POST',
+            body: JSON.stringify({
+              action: 'create_guest',
+              payload: payload
+            })
+          });
+        } catch (err) {
+          console.warn("Kunjungan disimpan offline:", err);
+        }
+      }
+
+      btn.disabled = false;
+      btnText.innerText = "Kirim & Aktifkan Kunjungan Hari Ini";
+
+      showToast("Kunjungan hari ini berhasil dicatat. Silakan tunjukkan barcode ke meja piket!");
+    }
+
+    // ==================== EDIT PROFILE ====================
+    function showEditProfileModal() {
+      if (!currentAccount) return;
+      document.getElementById('editNama').value = currentAccount.nama;
+      document.getElementById('editInstansi').value = currentAccount.instansi || '';
+      document.getElementById('editNoHp').value = currentAccount.noHp;
+      document.getElementById('editProfileModal').classList.remove('hidden');
+    }
+
+    function closeEditProfileModal() {
+      document.getElementById('editProfileModal').classList.add('hidden');
+    }
+
+    function handleSaveProfileEdit(e) {
+      e.preventDefault();
+      if (!currentAccount) return;
+
+      currentAccount.nama = document.getElementById('editNama').value.trim();
+      currentAccount.instansi = document.getElementById('editInstansi').value.trim();
+      currentAccount.noHp = document.getElementById('editNoHp').value.trim();
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(currentAccount));
+      closeEditProfileModal();
+      renderRegisteredGuestView();
+      showToast("Profil berhasil diperbarui");
+    }
+
+    function confirmResetAccount() {
+      if (confirm("Daftar sebagai tamu baru? Akun di perangkat ini akan diganti.")) {
+        localStorage.removeItem(STORAGE_KEY);
+        currentAccount = null;
+        renderNewGuestView();
+        showToast("Silakan isi formulir untuk mendaftar akun baru.");
+      }
+    }
+
+    // ==================== PRINT & DOWNLOAD ====================
+    function printBadge() {
+      if (!currentAccount) return;
+      const vId = currentAccount.visitorId;
+      const nama = currentAccount.nama;
+      const instansi = currentAccount.instansi || 'Pribadi';
+      const bertemu = document.getElementById('repeatBertemu').value.trim() || currentAccount.bertemu || '-';
+      const keperluan = document.getElementById('repeatKeperluan').value.trim() || currentAccount.keperluan || '-';
+
+      const printArea = document.getElementById('printArea');
+      printArea.innerHTML = `
+        <div style="border: 2px solid #0f172a; border-radius: 16px; padding: 24px; max-width: 320px; margin: 0 auto; text-align: center; font-family: Inter, sans-serif;">
+          <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #475569; margin-bottom: 8px;">PASS KUNJUNGAN RESMI</div>
+          <h2 style="font-size: 18px; font-weight: 700; color: #0f172a; margin: 0 0 4px;">${nama}</h2>
+          <p style="font-size: 12px; color: #64748b; margin: 0 0 16px;">${instansi}</p>
+          <div id="printQrBox" style="display: inline-block; padding: 8px; border: 1px solid #cbd5e1; border-radius: 10px;"></div>
+          <p style="font-family: monospace; font-weight: 700; font-size: 13px; margin: 10px 0 6px; color: #0f172a;">${vId}</p>
+          <div style="font-size: 11px; color: #475569; border-top: 1px solid #e2e8f0; padding-top: 8px; margin-top: 8px;">
+            Menemui: <b>${bertemu}</b><br>
+            Keperluan: ${keperluan}
+          </div>
+        </div>
+      `;
+
+      new QRCode(document.getElementById('printQrBox'), {
+        text: vId,
+        width: 130,
+        height: 130,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+      });
+
+      setTimeout(() => {
+        window.print();
+      }, 400);
+    }
+
+    function downloadQrImage() {
+      const qrImg = document.querySelector('#accountQrcodeBox img');
+      if (qrImg && qrImg.src) {
+        const link = document.createElement('a');
+        link.href = qrImg.src;
+        link.download = `Barcode_${currentAccount ? currentAccount.visitorId : 'Pass'}.png`;
+        link.click();
+      } else {
+        showToast("Gagal mengunduh gambar barcode");
+      }
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      const content = document.getElementById('toastContent');
+      content.innerText = msg;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 3200);
+    }
+  </script>
+</body>
+</html>
